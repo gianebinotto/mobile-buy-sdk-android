@@ -122,24 +122,27 @@ class GraphClient private constructor(
                 shopDomain: String,
                 accessToken: String,
                 configure: Config.() -> Unit = {},
+                isUnstable: Boolean,
                 locale: String? = null
         ): GraphClient = Config.create(
             context = context,
             shopDomain = shopDomain,
             accessToken = accessToken,
             configure = configure
-        ).build(locale)
+        ).build(locale, isUnstable)
 
         fun build(
                 context: Context,
                 shopDomain: String,
                 accessToken: String,
+                isUnstable: Boolean,
                 configure: Config.() -> Unit = {}
         ): GraphClient = build(
             context = context,
             shopDomain = shopDomain,
             accessToken = accessToken,
             configure = configure,
+            isUnstable = isUnstable,
             locale = null
         )
     }
@@ -158,7 +161,8 @@ class GraphClient private constructor(
         @VisibleForTesting
         internal var dispatcher: ScheduledThreadPoolExecutor? = null
         @VisibleForTesting
-        internal var endpointUrl = HttpUrl.parse("https://$shopDomain/api/${Storefront.API_VERSION}/graphql")
+        internal var endpointUrl = HttpUrl.parse("https://$shopDomain/api/2021-04/graphql")
+        private var unstableEndpointUrl = HttpUrl.parse("https://$shopDomain/api/unstable/graphql")
 
         init {
             shopDomain.checkNotBlank("shopDomain can't be empty")
@@ -191,12 +195,13 @@ class GraphClient private constructor(
          *
          * @return configured [GraphClient]
          */
-        fun build(locale: String?): GraphClient {
+        fun build(locale: String?, isUnstable: Boolean): GraphClient {
+            val endpoint = if(isUnstable) unstableEndpointUrl else endpointUrl
             val httpCache = httpCacheConfig.let { config ->
                 when (config) {
                     is HttpCacheConfig.DiskLru -> {
                         val version = BuildConfig.VERSION_NAME
-                        val tmp = (endpointUrl.toString() + "/" + version + "/" + accessToken + "/" + locale).toByteArray(Charset.forName("UTF-8"))
+                        val tmp = (endpoint.toString() + "/" + version + "/" + accessToken + "/" + locale).toByteArray(Charset.forName("UTF-8"))
                         val httpCacheFolder = File(config.cacheFolder, ByteString.of(*tmp).md5().hex())
                         HttpCache(
                             cacheStore = DiskLruCacheStore(
@@ -218,7 +223,7 @@ class GraphClient private constructor(
             ).withHttpCacheInterceptor(httpCache)
 
             return GraphClient(
-                serverUrl = endpointUrl,
+                serverUrl = endpoint,
                 httpCallFactory = okHttpClient,
                 defaultHttpCachePolicy = httpCacheConfig.defaultCachePolicy,
                 httpCache = httpCache,

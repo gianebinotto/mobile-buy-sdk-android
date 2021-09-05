@@ -6560,6 +6560,15 @@ public class Storefront {
         }
 
         /**
+         * The queue token.
+         */
+        public CheckoutCreatePayloadQuery queueToken() {
+            startField("queueToken");
+
+            return this;
+        }
+
+        /**
         * List of errors that occurred executing the mutation.
         */
         public CheckoutCreatePayloadQuery checkoutUserErrors(CheckoutUserErrorQueryDefinition queryDef) {
@@ -6605,6 +6614,17 @@ public class Storefront {
                         Checkout optional1 = null;
                         if (!field.getValue().isJsonNull()) {
                             optional1 = new Checkout(jsonAsObject(field.getValue(), key));
+                        }
+
+                        responseData.put(key, optional1);
+
+                        break;
+                    }
+
+                    case "queueToken": {
+                        String optional1 = null;
+                        if (!field.getValue().isJsonNull()) {
+                            optional1 = jsonAsString(field.getValue(), key);
                         }
 
                         responseData.put(key, optional1);
@@ -6690,9 +6710,24 @@ public class Storefront {
             return this;
         }
 
+        /**
+         * The queue token.
+         */
+
+        public String getQueueToken() {
+            return (String) get("queueToken");
+        }
+
+        public CheckoutCreatePayload setQueueToken(String arg) {
+            optimisticData.put(getKey("queueToken"), arg);
+            return this;
+        }
+
         public boolean unwrapsToObject(String key) {
             switch (getFieldName(key)) {
                 case "checkout": return true;
+
+                case "queueToken": return true;
 
                 case "checkoutUserErrors": return true;
 
@@ -8297,6 +8332,8 @@ public class Storefront {
         */
         EMPTY,
 
+        EXPIRED_QUEUE_TOKEN,
+
         /**
         * Gift card has already been applied.
         */
@@ -8362,6 +8399,8 @@ public class Storefront {
         */
         INVALID_PROVINCE_IN_COUNTRY,
 
+        INVALID_QUEUE_TOKEN,
+
         /**
         * Invalid region in country.
         */
@@ -8416,6 +8455,8 @@ public class Storefront {
         * Shipping rate expired.
         */
         SHIPPING_RATE_EXPIRED,
+
+        THROTTLED_DURING_CHECKOUT,
 
         /**
         * Input value is too long.
@@ -8484,6 +8525,10 @@ public class Storefront {
                     return EMPTY;
                 }
 
+                case "EXPIRED_QUEUE_TOKEN": {
+                    return EXPIRED_QUEUE_TOKEN;
+                }
+
                 case "GIFT_CARD_ALREADY_APPLIED": {
                     return GIFT_CARD_ALREADY_APPLIED;
                 }
@@ -8536,6 +8581,10 @@ public class Storefront {
                     return INVALID_PROVINCE_IN_COUNTRY;
                 }
 
+                case "INVALID_QUEUE_TOKEN": {
+                    return INVALID_QUEUE_TOKEN;
+                }
+
                 case "INVALID_REGION_IN_COUNTRY": {
                     return INVALID_REGION_IN_COUNTRY;
                 }
@@ -8578,6 +8627,10 @@ public class Storefront {
 
                 case "SHIPPING_RATE_EXPIRED": {
                     return SHIPPING_RATE_EXPIRED;
+                }
+
+                case "THROTTLED_DURING_CHECKOUT": {
+                    return THROTTLED_DURING_CHECKOUT;
                 }
 
                 case "TOO_LONG": {
@@ -30107,11 +30160,16 @@ public class Storefront {
                 /**
                 * Creates a new checkout.
                 */
-                public MutationQuery checkoutCreate(CheckoutCreateInput input, CheckoutCreatePayloadQueryDefinition queryDef) {
+                public MutationQuery checkoutCreate(CheckoutCreateInput input, String queueToken, CheckoutCreatePayloadQueryDefinition queryDef) {
                     startField("checkoutCreate");
 
                     _queryBuilder.append("(input:");
                     input.appendTo(_queryBuilder);
+
+                    if(queueToken != null) {
+                        _queryBuilder.append(",queueToken:");
+                        Query.appendQuotedString(_queryBuilder, queueToken.toString());
+                    }
 
                     _queryBuilder.append(')');
 
